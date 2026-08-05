@@ -132,26 +132,9 @@ Réponse JSON structurée (SupportTicketResponse)
 - Connexion internet au premier démarrage (téléchargement des modèles
   depuis Hugging Face Hub, puis mis en cache localement)
 
-### Étapes
 
-```bash
-# 1. Cloner le dépôt
-git clone <url-du-repo>
-cd support-ticket-api
 
-# 2. Créer un environnement virtuel
-python3 -m venv venv
-source venv/bin/activate        # Linux/Mac
-# venv\Scripts\activate         # Windows
-
-# 3. Installer les dépendances
-pip install -r requirements.txt
-
-# 4. (Optionnel) Copier le fichier de configuration
-cp .env.example .env
-```
-
-## 6. Lancer l'API
+## 5. Lancer l'API
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -168,7 +151,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 > car les modèles restent chargés en mémoire (voir §10) et mis en cache
 > sur disque par `transformers`/`sentence-transformers`.
 
-## 7. Utilisation de l'API
+## 6. Utilisation de l'API
 
 ### Exemple avec `curl` (texte seul)
 
@@ -198,49 +181,7 @@ response = httpx.post("http://localhost:8000/support-ticket", files=files, timeo
 print(response.json())
 ```
 
-## 8. Détail du endpoint POST /support-ticket
-
-**Requête** — `multipart/form-data` :
-
-| Champ | Type | Obligatoire | Description |
-|---|---|---|---|
-| `audio` | fichier | Non* | `.mp3`, `.wav`, `.m4a`, `.ogg` — max 25 Mo |
-| `image` | fichier | Non* | `.png`, `.jpg`, `.jpeg`, `.webp` — max 10 Mo |
-| `description` | texte | Non* | Description libre du problème |
-
-\* Au moins un des trois champs doit être renseigné.
-
-**Réponse** — `200 OK` (`application/json`) :
-
-```json
-{
-  "ticket_id": "3f2a1c9e-...-8b0d",
-  "transcription": {
-    "text": "Bonjour, mon colis est arrivé avec la boite cassée",
-    "language": "fr",
-    "duration_seconds": 1.42
-  },
-  "vision_diagnosis": {
-    "label": "broken glass",
-    "confidence": 0.87,
-    "is_defect_suspected": true
-  },
-  "applicable_rule": {
-    "rule_title": "Produit endommagé à la livraison",
-    "rule_text": "Si le produit reçu est endommagé...",
-    "score": 0.81,
-    "source": "CGV"
-  },
-  "proposed_status": "Remboursable",
-  "status_reason": "La règle interne 'Produit endommagé à la livraison' prévoit un remboursement...",
-  "warnings": []
-}
-```
-
-Chaque champ (`transcription`, `vision_diagnosis`, `applicable_rule`) est
-`null` si l'entrée correspondante n'a pas été fournie ou n'a rien donné
-d'exploitable.
-
+0
 ## 9. Gestion des erreurs
 
 Toutes les erreurs renvoient un JSON structuré `{ "detail": ..., "error_code": ... }` :
@@ -281,43 +222,16 @@ De la même façon, la base de connaissances RAG est **encodée en
 vecteurs une seule fois** au premier appel (`_load_knowledge_base()`),
 puis réutilisée pour toutes les recherches suivantes.
 
-## 11. Tests
 
-```bash
-pytest tests/ -v
-```
 
-Les services IA (Whisper, ViT, RAG) sont **mockés** dans les tests
-(`unittest.mock.patch`) afin de :
-- ne pas dépendre du téléchargement des modèles pour faire tourner la
-  CI/CD ;
-- tester la logique métier (validation, routing, décision de statut) de
-  façon rapide et déterministe.
 
-## 12. Configuration (.env)
-
-Voir `.env.example`. Toutes les variables sont préfixées par
-`SUPPORT_API_` et définies dans `app/core/config.py` (classe
-`Settings`), elle-même mise en cache via `@lru_cache()`
-(`get_settings()`) pour n'être chargée/validée qu'une seule fois.
 
 ## 13. Base de connaissances (RAG)
 
-Le fichier `app/data/knowledge_base.json` contient des règles CGV/FAQ
+Le fichier `app/data/faq.txt` contient des règles CGV/FAQ
 factices (retour, produit endommagé, retard de livraison...). Chaque
 entrée a la forme :
 
-```json
-{
-  "id": "cgv-01",
-  "source": "CGV",
-  "title": "Produit endommagé à la livraison",
-  "text": "Si le produit reçu est endommagé..."
-}
-```
-
-Pour l'enrichir : ajouter des entrées dans ce fichier, redémarrer
-l'API (le cache d'embeddings est régénéré au redémarrage du process).
 
 ## 14. Git Flow & gestion de projet
 
@@ -331,21 +245,3 @@ l'API (le cache d'embeddings est régénéré au redémarrage du process).
   séparé `TASKS.md` (non inclus dans ce README, conformément à la
   consigne).
 
-## 15. Limites connues & pistes d'amélioration
-
-- Le modèle de vision utilisé (`vit-base-patch16-224`) est un modèle
-  **généraliste ImageNet**, pas un modèle fine-tuné sur des photos de
-  colis/produits endommagés. La détection de défaut repose ici sur une
-  **heuristique de mots-clés** appliquée aux labels ImageNet retournés,
-  à but de démonstration. En production : fine-tuning sur un dataset
-  interne annoté (produit conforme / endommagé / mauvaise référence...).
-- Le RAG effectue de la recherche par similarité simple (top-1) : pas de
-  reformulation par LLM de la règle retrouvée. On pourrait ajouter une
-  étape de génération (LLM) pour reformuler la réponse de façon plus
-  naturelle pour l'agent support.
-- Pas de persistance des tickets (base de données) : chaque appel est
-  stateless. Une prochaine itération pourrait stocker les tickets créés
-  dans une base (PostgreSQL, MongoDB...) avec leur statut.
-- Le device est configuré sur `cpu` par défaut ; sur une machine avec
-  GPU, positionner `SUPPORT_API_DEVICE=cuda` accélère significativement
-  Whisper et ViT.
