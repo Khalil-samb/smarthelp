@@ -1,0 +1,30 @@
+================================================================================
+BASE DE CONNAISSANCES INTERNE - POLITIQUE DE SUPPORT ET DE RETOUR (SMARTHELP)
+================================================================================
+
+[DOCUMENT OFFICIEL - USAGE INTERNE ET AUTOMATISATION RAG]
+
+---
+SECTION 1 : PRODUITS ENDOMMAGÉS OU CASSÉS À LA LIVRAISON
+---
+- Règle 1.1 (Casse / Dommage visible) : Si le client signale un produit cassé, fissuré ou endommagé, et fournit une photo probante de l'article dans un délai de 48 heures suivant la réception, le dossier est éligible à un remboursement intégral ou à un renvoi gratuit. Statut associé : "Remboursable".
+- Règle 1.2 (Délai dépassé) : Si la réclamation pour produit cassé est faite après un délai de 48 heures, la demande est soumise à validation manuelle du manager. Statut associé : "À vérifier".
+
+---
+SECTION 2 : ERREURS DE LIVRAISON ET NON-CONFORMITÉ DE COMMANDE
+---
+- Règle 2.1 (Mauvais article reçu) : Si le produit reçu ne correspond pas en termes de modèle, de couleur ou de taille par rapport à la commande initiale, l'échange est entièrement pris en charge par l'entreprise (frais de retour offerts). Statut associé : "Échange gratuit".
+- Règle 2.2 (Pièce manquante) : Si un accessoire ou une pièce d'un kit est manquant à la réception, l'entreprise s'engage à expédier uniquement la pièce manquante sous 3 jours ouvrés. Statut associé : "Expédition de pièce".
+
+---
+SECTION 3 : RETARDS DE LIVRAISON ET PROBLÈMES LOGISTIQUES
+---
+- Règle 3.1 (Retard mineur) : Un retard de livraison inférieur ou égal à 3 jours ouvrés par rapport à la date estimée ne donne droit à aucun dédommagement financier. Statut associé : "Non remboursable - Retard mineur".
+- Règle 3.2 (Retard majeur) : Un retard supérieur à 5 jours ouvrés donne droit à un bon d'achat de 10% valable sur la prochaine commande. Statut associé : "Dédommagement 10%".
+- Règle 3.3 (Colis perdu) : Si le statut du transporteur indique "Bloqué" ou "Perdu" depuis plus de 7 jours, un remboursement total est déclenché automatiquement après enquête transporteur. Statut associé : "Remboursable - Colis perdu".
+
+---
+SECTION 4 : RÈGLES GÉNÉRALES DE REFUS (HORS CADRE)
+---
+- Règle 4.1 (Usure normale / Mauvaise utilisation) : Si l'analyse visuelle ou la description audio montre que le défaut est dû à une mauvaise manipulation du client, à une chute après réception ou à une usure normale, la réclamation est rejetée. Statut associé : "Refusé".
+- Règle 4.2 (Absence de preuve) : Toute réclamation concernant un produit endommagé ou non conforme qui ne comporte ni photo probante ni description claire par message vocal sera mise en attente de pièces complémentaires. Statut associé : "En attente de justificatifs".

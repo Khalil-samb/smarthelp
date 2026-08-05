@@ -7,5 +7,12 @@ app = FastAPI(
     debug=settings.DEBUG      # ← Modifié
 )
 
-
 app.include_router(router)
+
+@app.get("/")
+async def root():
+    return {"message": "Support Ticket Assistant API"}
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
