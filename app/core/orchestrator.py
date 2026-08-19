@@ -59,7 +59,7 @@ class Orchestrator:
             image_bytes = await read_file_within_limit(image)
             validate_image_file(image, image_bytes)
             image_diagnostic = self._vision_service.analyser(image_bytes)
-
+            print(f"image diagmostic : {image_diagnostic}")
         # === 3. RAG ===
         if transcription or description:
             query_text = description or transcription
@@ -74,12 +74,20 @@ class Orchestrator:
             description_image=image_diagnostic,  # ← Changé : description_image
             rag_rule=rag_rule
         )
+        
+        
+        # Récupération sécurisée avec .get()
+        description_image = diagnostic.get("description_image", image_diagnostic)
+
+        print(f"Description de l'image : {description_image}")
 
         return {
             "transcription": transcription,
-            "image_diagnostic": image_diagnostic,
+            "description_image": description_image,
             "rag_rule": rag_rule,
-            "ticket_status": diagnostic["ticket_status"],
-            "confidence": diagnostic["confidence"],
-            "reasoning": diagnostic["reasoning"]
+            "ticket_status": diagnostic.get("ticket_status", "A verifier"),
+            "confidence": diagnostic.get("confidence", 0.0),
+            "reasoning": diagnostic.get("reasoning", "Erreur indéterminée")
         }
+        
+        

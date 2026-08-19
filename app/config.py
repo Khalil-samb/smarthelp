@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     
     # Fichiers
-    MAX_FILE_SIZE_MB: int = 50
+    MAX_FILE_SIZE_MB: int = 15
     
     # Modèles IA 
     WHISPER_MODEL: str = "openai/whisper-small"
@@ -29,7 +29,17 @@ class Settings(BaseSettings):
     INFERENCE_DEVICE: str = "cpu"
     
     # Types MIME autorisés
-    ALLOWED_AUDIO_TYPES: set = {"audio/mpeg", "audio/wav", "audio/wave", "audio/x-wav"}
+    ALLOWED_AUDIO_TYPES: set = {
+        "audio/mpeg",
+        "audio/mp3",
+        "audio/wav",
+        "audio/wave",
+        "audio/x-wav",
+        "audio/webm",
+        "audio/ogg",
+        "audio/opus",
+        "audio/mp4",
+    }
     ALLOWED_IMAGE_TYPES: set = {"image/png", "image/jpeg", "image/jpg", "image/bmp", "image/webp"}
     
     @property

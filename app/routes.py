@@ -13,19 +13,22 @@ async def create_support_ticket(
     image: Optional[UploadFile] = File(None),
     description: Optional[str] = Form(None)
 ):
+    if description is not None:
+        description = description.strip() or None
+
     if not audio and not image and not description:
-        raise HTTPException(400, "Au moins un fichier ou une description est requis")
+        raise HTTPException(400, detail="Au moins un fichier ou une description est requis")
 
     try:
         result = await orchestrator.process(audio, image, description)
-        
+
         return TicketResponse(
-            transcription=result["transcription"],
-            image_diagnostic=result["image_diagnostic"],
-            rag_rule=result["rag_rule"],
-            ticket_status=result["ticket_status"],
-            confidence=result["confidence"],
-            reasoning=result["reasoning"]
+            transcription=result.get("transcription"),
+            description_image=result.get("description_image"),
+            rag_rule=result.get("rag_rule"),
+            ticket_status=result.get("ticket_status", "needs_review"),
+            confidence=float(result.get("confidence", 0.0)),
+            reasoning=result.get("reasoning")
         )
 
     except HTTPException:

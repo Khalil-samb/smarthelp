@@ -8,10 +8,22 @@ from app.config import settings
 # CONSTANTES
 # ============================
 
-ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav"}
+ALLOWED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".ogg", ".aac", ".webm"}
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".webp"}
 
-ALLOWED_AUDIO_MIME = {"audio/mpeg", "audio/wav", "audio/wave", "audio/x-wav"}
+ALLOWED_AUDIO_MIME = {
+    "audio/mpeg",
+    "audio/wav",
+    "audio/wave",
+    "audio/x-wav",
+    "audio/mp4",
+    "audio/m4a",
+    "audio/x-m4a",
+    "audio/ogg",
+    "audio/aac",
+    "audio/webm",
+    "audio/webm;codecs=opus",  # certains navigateurs incluent le codec dans le content_type
+}
 ALLOWED_IMAGE_MIME = {"image/png", "image/jpeg", "image/jpg", "image/bmp", "image/webp"}
 
 
@@ -34,19 +46,20 @@ async def read_file_within_limit(file: UploadFile) -> bytes:
 def validate_audio_file(file: UploadFile, contents: bytes) -> None:
     """
     Valide un fichier audio sur 2 niveaux :
-    1. Extension (.mp3 ou .wav)
-    2. Type MIME (audio/mpeg, audio/wav, etc.)
+    1. Extension (.mp3, .wav, .m4a, .ogg, .aac, .webm)
+    2. Type MIME (audio/webm, audio/mpeg, audio/wav, etc.)
     """
-    # 1. Vérifier l'extension
-    ext = os.path.splitext(file.filename)[1].lower()
+    ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_AUDIO_EXTENSIONS:
         raise HTTPException(
             status_code=415,
-            detail=f"Extension audio non supportée. Utilisez: {', '.join(ALLOWED_AUDIO_EXTENSIONS)}"
+            detail=f"Extension audio non supportée. Utilisez: {', '.join(sorted(ALLOWED_AUDIO_EXTENSIONS))}"
         )
 
-    # 2. Vérifier le MIME
-    if file.content_type is None or file.content_type not in ALLOWED_AUDIO_MIME:
+    # Le content_type du navigateur peut inclure le codec (ex: "audio/webm;codecs=opus")
+    # on ne compare que la partie avant le point-virgule
+    mime = (file.content_type or "").lower().split(";")[0].strip()
+    if mime and mime not in {m.split(";")[0] for m in ALLOWED_AUDIO_MIME}:
         raise HTTPException(
             status_code=415,
             detail="Type MIME audio non supporté ou manquant."
@@ -61,7 +74,7 @@ def validate_image_file(file: UploadFile, contents: bytes) -> None:
     3. Contenu réel (via PIL)
     """
     # 1. Vérifier l'extension
-    ext = os.path.splitext(file.filename)[1].lower()
+    ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_IMAGE_EXTENSIONS:
         raise HTTPException(
             status_code=415,

@@ -6,6 +6,7 @@ import json
 import re
 from groq import Groq
 from app.config import settings
+from typing import Optional
 
 
 class DiagnosticService:
@@ -30,9 +31,39 @@ class DiagnosticService:
             print(f"ERREUR: impossible d'initialiser le client Groq : {e}")
             self._client = None
 
+    @staticmethod
+    def _normalize_status(value: Optional[str]) -> str:
+        if value is None:
+            return "needs_review"
+
+        normalized = str(value).strip().lower()
+        mapping = {
+            "accepted": "accepted",
+            "approve": "accepted",
+            "approved": "accepted",
+            "reimbursable": "accepted",
+            "rejected": "rejected",
+            "refuse": "rejected",
+            "refused": "rejected",
+            "a verifier": "needs_review",
+            "needs_review": "needs_review",
+            "needs review": "needs_review",
+            "review": "needs_review",
+            "pending": "needs_review",
+            "verify": "needs_review",
+            "vérifier": "needs_review",
+        }
+        return mapping.get(normalized, "needs_review")
+
     def diagnostiquer(self, transcription: str, description_image: str, rag_rule: str) -> dict:
+        # CAS 1 : Client non initialisé (clé ajoutée ici)
         if not self._client:
-            return {"ticket_status": "A verifier", "confidence": 0.3, "reasoning": "GROQ_API_KEY non definie"}
+            return {
+                "ticket_status": "needs_review",
+                "confidence": 0.3,
+                "reasoning": "GROQ_API_KEY non definie",
+                "description_image": description_image
+            }
 
         prompt = self._construire_prompt(transcription, description_image, rag_rule)
 
@@ -62,13 +93,15 @@ class DiagnosticService:
             data = self._parse_response_content(content)
             
             return {
-                "ticket_status": data["status"],
-                "confidence": float(data["confidence"]),
-                "reasoning": data["reasoning"]
+                "ticket_status": self._normalize_status(data.get("status", "needs_review")),
+                "confidence": float(data.get("confidence", 0.3)),
+                "reasoning": data.get("reasoning", "Pas de justification fournie."),
+                "description_image": description_image
             }
 
         except Exception as e:
-            return self._fallback(str(e))
+            # CAS 2 : Passe description_image au fallback
+            return self._fallback(str(e), description_image)   
 
     def _parse_response_content(self, content: str) -> dict:
         """Parse la réponse JSON du LLM avec fallback."""
@@ -95,9 +128,14 @@ class DiagnosticService:
         prompt += "Retourne le diagnostic sous forme de JSON."
         return prompt
 
-    def _fallback(self, error: str) -> dict:
+
+   # Fallback mis à jour pour toujours inclure description_image
+    def _fallback(self, error: str, description_image: Optional[str] = None) -> dict:
         return {
-            "ticket_status": "A verifier",
+            "ticket_status": "needs_review",
             "confidence": 0.3,
-            "reasoning": f"Erreur: {error}"
+            "reasoning": f"Erreur: {error}",
+            "description_image": description_image
         }
+        
+        
